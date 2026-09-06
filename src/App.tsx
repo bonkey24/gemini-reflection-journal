@@ -6,7 +6,7 @@ import {
   Plus, 
   ShieldCheck, 
   AlertTriangle,
-  User as UserIcon
+  Brain
 } from "lucide-react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, signInWithGoogle, logOut } from "./lib/firebase";
@@ -41,6 +41,7 @@ export default function App() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
   
   // Interaction & Async states
   const [isGenerating, setIsGenerating] = useState(false);
@@ -340,7 +341,7 @@ export default function App() {
               <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
             </div>
             <span className="font-serif italic font-semibold text-stone-900 text-base tracking-tight hidden sm:inline">
-              ReflectAI
+              Prism
             </span>
           </div>
 
@@ -381,6 +382,20 @@ export default function App() {
               </span>
             </div>
           </div>
+
+          {/* Mobile Insights Toggle Button */}
+          {selectedEntry && (
+            <button
+              id="toggle-insights-mobile-btn"
+              onClick={() => setInsightsOpen(!insightsOpen)}
+              className={`p-1.5 rounded-md text-stone-600 hover:bg-[#F0EBE1] lg:hidden transition-colors ${
+                insightsOpen ? "bg-[#EAE4DC] text-stone-900" : ""
+              }`}
+              title="Toggle AI Synthesis & Telemetry"
+            >
+              <Brain className="w-5 h-5 text-[#3A4D39]" />
+            </button>
+          )}
 
           <button
             id="signout-button"
@@ -459,6 +474,8 @@ export default function App() {
             onUpdateEntry={handleUpdateEntry}
             onSendFollowUp={(prompt) => handleSendTurn(prompt, selectedEntry.mode)}
             isGenerating={isGenerating}
+            isOpenMobile={insightsOpen}
+            onCloseMobile={() => setInsightsOpen(false)}
           />
         )}
       </div>

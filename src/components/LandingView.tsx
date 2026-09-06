@@ -27,7 +27,7 @@ export function LandingView({ onSignIn, isLoading, errorMessage }: LandingViewPr
               <Sparkles className="w-4 h-4 text-emerald-200" />
             </div>
             <span className="font-serif italic text-xl tracking-tight text-stone-900 font-medium">
-              ReflectAI
+              Prism
             </span>
           </div>
 
@@ -174,7 +174,7 @@ export function LandingView({ onSignIn, isLoading, errorMessage }: LandingViewPr
       {/* Footer */}
       <footer id="landing-footer" className="w-full border-t border-[#EAE4DC] py-6 text-center text-xs text-stone-500 font-sans">
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} ReflectAI. Powered by Gemini API & Firebase Firestore.</p>
+          <p>© {new Date().getFullYear()} Prism. Powered by Gemini API & Firebase Firestore.</p>
           <div className="flex items-center gap-4 text-stone-400 text-[11px]">
             <span>Client-Server Security Isolation</span>
             <span>•</span>

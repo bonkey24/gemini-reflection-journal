@@ -11,7 +11,8 @@ import {
   CheckCircle,
   CheckSquare,
   Square,
-  Brain
+  Brain,
+  X
 } from "lucide-react";
 import type { JournalEntry } from "../types";
 
@@ -20,9 +21,18 @@ interface InsightPanelProps {
   onUpdateEntry?: (updated: JournalEntry) => Promise<void>;
   onSendFollowUp: (prompt: string) => void;
   isGenerating: boolean;
+  isOpenMobile?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export function InsightPanel({ currentEntry, onUpdateEntry, onSendFollowUp, isGenerating }: InsightPanelProps) {
+export function InsightPanel({ 
+  currentEntry, 
+  onUpdateEntry, 
+  onSendFollowUp, 
+  isGenerating,
+  isOpenMobile,
+  onCloseMobile
+}: InsightPanelProps) {
   const userMessagesCount = currentEntry.messages.filter(m => m.role === "user").length;
   const wordCount = currentEntry.messages
     .filter(m => m.role === "user")
@@ -49,123 +59,158 @@ export function InsightPanel({ currentEntry, onUpdateEntry, onSendFollowUp, isGe
     : "—";
 
   return (
-    <div id="insights-panel" className="w-80 bg-[#FAF8F5] border-l border-[#EAE4DC] flex flex-col h-full overflow-y-auto hidden xl:flex">
-      {/* Header */}
-      <div className="p-4 border-b border-[#EAE4DC] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-[#3A4D39]" />
-          <h3 className="font-serif italic font-medium text-stone-900 text-sm">
-            AI Synthesis & Context
-          </h3>
-        </div>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAE4DC] text-stone-700 font-mono font-medium">
-          Gemini 3.7 Flash
-        </span>
-      </div>
+    <>
+      {/* Mobile Backdrop when opened as overlay */}
+      {isOpenMobile && (
+        <div 
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-stone-900/30 backdrop-blur-xs z-30 lg:hidden"
+        />
+      )}
 
-      <div className="p-4 space-y-4 flex-1">
-        {/* Summary Card */}
-        <div className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
-          <div className="flex items-center gap-2 text-xs font-serif font-semibold text-stone-900 mb-2">
-            <FileCheck className="w-4 h-4 text-[#3A4D39]" />
-            <span>Executive Synthesis</span>
+      <aside 
+        id="insights-panel" 
+        className={`w-80 shrink-0 bg-[#FAF8F5] border-l border-[#EAE4DC] flex flex-col h-full overflow-y-auto transition-transform duration-200 ease-in-out ${
+          isOpenMobile 
+            ? "fixed top-0 bottom-0 right-0 z-40 translate-x-0" 
+            : "hidden lg:flex"
+        }`}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-[#EAE4DC] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-4 h-4 text-[#3A4D39]" />
+            <h3 className="font-serif italic font-medium text-stone-900 text-sm">
+              AI Synthesis & Context
+            </h3>
           </div>
-
-          {currentEntry.summary ? (
-            <p className="text-xs text-stone-600 leading-relaxed font-sans">
-              {currentEntry.summary}
-            </p>
-          ) : (
-            <p className="text-xs text-stone-400 font-serif italic">
-              Summaries are generated automatically as you converse with Gemini.
-            </p>
-          )}
-        </div>
-
-        {/* Reflection Stats & Sentiment Telemetry */}
-        <div id="sentiment-telemetry-widget" className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
-          <div className="flex items-center gap-2 text-xs font-serif font-semibold text-stone-900 mb-3">
-            <Zap className="w-4 h-4 text-[#3A4D39]" />
-            <span>Reflection & Sentiment Telemetry</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAE4DC] text-stone-700 font-mono font-medium">
+              Gemini 3.7 Flash
+            </span>
+            {onCloseMobile && (
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className="p-1 text-stone-400 hover:text-stone-700 rounded-md lg:hidden"
+                title="Close Insights Panel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-
-          <div className="grid grid-cols-3 gap-2 text-center mb-3">
-            <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
-              <span className="block text-base font-serif font-semibold text-stone-900 font-mono">
-                {userMessagesCount}
-              </span>
-              <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
-                Turns
-              </span>
-            </div>
-            <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
-              <span className="block text-base font-serif font-semibold text-stone-900 font-mono">
-                {wordCount}
-              </span>
-              <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
-                Words
-              </span>
-            </div>
-            <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
-              <span id="sentiment-score-value" className="block text-base font-serif font-semibold text-[#3A4D39] font-mono">
-                {sentimentDisplay}
-              </span>
-              <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
-                Clarity / Mood
-              </span>
-            </div>
-          </div>
-
-          {currentEntry.sentimentScore != null && (
-            <div className="w-full bg-[#EAE4DC] h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-[#2D3B2C] h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(10, currentEntry.sentimentScore * 10))}%` }}
-              />
-            </div>
-          )}
         </div>
 
-        {/* Actionable Steps (Interactive Checklist Telemetry) */}
-        {currentEntry.actionableSteps && currentEntry.actionableSteps.length > 0 && (
+        <div className="p-4 space-y-4 flex-1">
+          {/* Summary Card */}
+          <div className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
+            <div className="flex items-center gap-2 text-xs font-serif font-semibold text-stone-900 mb-2">
+              <FileCheck className="w-4 h-4 text-[#3A4D39]" />
+              <span>Executive Synthesis</span>
+            </div>
+
+            {currentEntry.summary ? (
+              <p className="text-xs text-stone-600 leading-relaxed font-sans">
+                {currentEntry.summary}
+              </p>
+            ) : (
+              <p className="text-xs text-stone-400 font-serif italic">
+                Summaries are generated automatically as you converse with Gemini.
+              </p>
+            )}
+          </div>
+
+          {/* Reflection Stats & Sentiment Telemetry */}
+          <div id="sentiment-telemetry-widget" className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
+            <div className="flex items-center gap-2 text-xs font-serif font-semibold text-stone-900 mb-3">
+              <Zap className="w-4 h-4 text-[#3A4D39]" />
+              <span>Reflection & Sentiment Telemetry</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-center mb-3">
+              <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
+                <span className="block text-base font-serif font-semibold text-stone-900 font-mono">
+                  {userMessagesCount}
+                </span>
+                <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
+                  Turns
+                </span>
+              </div>
+              <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
+                <span className="block text-base font-serif font-semibold text-stone-900 font-mono">
+                  {wordCount}
+                </span>
+                <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
+                  Words
+                </span>
+              </div>
+              <div className="p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE4DC]">
+                <span id="sentiment-score-value" className="block text-base font-serif font-semibold text-[#3A4D39] font-mono">
+                  {sentimentDisplay}
+                </span>
+                <span className="text-[9px] text-stone-500 uppercase tracking-wider font-sans">
+                  Clarity / Mood
+                </span>
+              </div>
+            </div>
+
+            {currentEntry.sentimentScore != null && (
+              <div className="w-full bg-[#EAE4DC] h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#2D3B2C] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(10, currentEntry.sentimentScore * 10))}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Action Items (Interactive Checklist Telemetry) */}
           <div id="action-items-checklist" className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
             <div className="flex items-center justify-between text-xs font-serif font-semibold text-stone-900 mb-2.5">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[#3A4D39]" />
                 <span>Action Items</span>
               </div>
-              <span className="text-[10px] text-stone-400 font-mono font-normal">
-                {completedSteps.size}/{currentEntry.actionableSteps.length} done
-              </span>
+              {currentEntry.actionableSteps && currentEntry.actionableSteps.length > 0 && (
+                <span className="text-[10px] text-stone-400 font-mono font-normal">
+                  {completedSteps.size}/{currentEntry.actionableSteps.length} done
+                </span>
+              )}
             </div>
-            <ul className="space-y-2">
-              {currentEntry.actionableSteps.map((step, idx) => {
-                const isChecked = completedSteps.has(step);
-                return (
-                  <li 
-                    key={idx} 
-                    onClick={() => handleToggleStep(step)}
-                    className="flex items-start gap-2 text-xs text-stone-700 font-sans leading-relaxed cursor-pointer group hover:text-stone-900 transition-colors select-none"
-                  >
-                    <button
-                      type="button"
-                      className="mt-0.5 text-stone-400 group-hover:text-[#3A4D39] shrink-0 transition-colors focus:outline-none"
+
+            {currentEntry.actionableSteps && currentEntry.actionableSteps.length > 0 ? (
+              <ul className="space-y-2">
+                {currentEntry.actionableSteps.map((step, idx) => {
+                  const isChecked = completedSteps.has(step);
+                  return (
+                    <li 
+                      key={idx} 
+                      onClick={() => handleToggleStep(step)}
+                      className="flex items-start gap-2 text-xs text-stone-700 font-sans leading-relaxed cursor-pointer group hover:text-stone-900 transition-colors select-none"
                     >
-                      {isChecked ? (
-                        <CheckSquare className="w-4 h-4 text-[#3A4D39]" />
-                      ) : (
-                        <Square className="w-4 h-4 text-stone-400" />
-                      )}
-                    </button>
-                    <span className={`flex-1 ${isChecked ? "line-through text-stone-400" : "text-stone-700"}`}>
-                      {step}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+                      <button
+                        type="button"
+                        className="mt-0.5 text-stone-400 group-hover:text-[#3A4D39] shrink-0 transition-colors focus:outline-none"
+                      >
+                        {isChecked ? (
+                          <CheckSquare className="w-4 h-4 text-[#3A4D39]" />
+                        ) : (
+                          <Square className="w-4 h-4 text-stone-400" />
+                        )}
+                      </button>
+                      <span className={`flex-1 ${isChecked ? "line-through text-stone-400" : "text-stone-700"}`}>
+                        {step}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-xs text-stone-400 font-serif italic leading-relaxed">
+                Action items and pragmatic next steps will appear here automatically as you converse with Gemini.
+              </p>
+            )}
           </div>
-        )}
 
         {/* Suggested Follow-up Inquiries */}
         <div className="bg-white p-4 rounded-xl border border-[#DFD7CB] shadow-2xs">
@@ -208,6 +253,7 @@ export function InsightPanel({ currentEntry, onUpdateEntry, onSendFollowUp, isGe
           </div>
         </div>
       </div>
-    </div>
+    </aside>
+  </>
   );
 }
