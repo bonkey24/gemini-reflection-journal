@@ -15,7 +15,7 @@ app.use(express.json({ limit: "2mb" }));
 // Initialize Google GenAI client lazily with secure env var
 let aiClient: GoogleGenAI | null = null;
 function getGenAI(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured on the server environment.");
   }
@@ -408,8 +408,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Server] Prism server running on http://0.0.0.0:${PORT}`);
+  app.listen(PORT, "localhost", () => {
+    console.log(`[Server] Prism server running on http://localhost:${PORT}`);
   });
 }
 
